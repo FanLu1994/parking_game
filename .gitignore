@@ -1,0 +1,6 @@
+# 商业歌曲片段，仅本地使用（tools/make_clear_sfx.sh 生成）
+assets/audio/clear.mp3
+# 字体源文件（tools/subset_fonts.py 的输入）
+fonts/src/
+node_modules/
+.vercel/
