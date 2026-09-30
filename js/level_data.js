@@ -63,17 +63,19 @@ const PARK_SCENES = {
     walls: [...BOUNDS, R(16, 56, 862, 120), R(972, 56, 12, 120)],
     laneLines: [390],
   },
-  // 5：中央大草坪 + 四角正常车位
+  // 5：中央大草坪 + 四角正常车位；四角不留相邻空位，草坪边的一排车位才能"一车两位 + 压草"
   lawn5: {
     theme: 'plaza',
     spawn: { x: 500, y: 570, angle: -Math.PI / 2 },
-    spots: [...row(80, 130, 3), ...row(820, 130, 3), ...row(80, 520, 3), ...row(820, 520, 3)],
+    spots: [...row(80, 130, 3), ...row(820, 130, 3), ...row(80, 520, 3), ...row(820, 520, 3),
+            ...row(350, 148, 7)],
     grass: [R(330, 190, 340, 280)],
     signs: [[500, 330]],
-    npcs: [parked(130, 130), parked(870, 520, Math.PI), parked(80, 520)],
+    npcs: [parked(130, 130), parked(870, 130, Math.PI), parked(870, 520, Math.PI), parked(80, 520), parked(180, 520, Math.PI),
+           parked(350, 148), parked(500, 148, Math.PI), parked(650, 148)],
     walls: [...BOUNDS],
   },
-  // 6：广场舞专区 + 单元门口 + 垃圾桶阵，一停三吃；挪车电话
+  // 6：广场舞专区 + 单元门口 + 垃圾桶阵，一停三吃；挪车电话；小区车位紧张，没有相邻空位
   community6: {
     theme: 'plaza',
     spawn: { x: 80, y: 430, angle: Math.PI / 2 },
@@ -85,7 +87,10 @@ const PARK_SCENES = {
     grass: [R(16, 56, 180, 150), R(820, 380, 164, 100)],
     signs: [[100, 120]],
     spots: [...row(260, 540, 10)],
-    npcs: [parked(310, 540), parked(460, 540, Math.PI), parked(610, 540), parked(710, 540, Math.PI)],
+    npcs: [parked(310, 540), parked(410, 540, Math.PI), parked(460, 540, Math.PI), parked(560, 540),
+           parked(610, 540), parked(710, 540, Math.PI),
+           parked(633, 165, Math.PI / 2),    // 广场舞专区里已经横着一辆
+           parked(565, 207, Math.PI / 2)],   // 单元门口也堵着一辆；夹进两车之间 = 堵门 + 占舞池 + 双侧贴脸
     props: [['bin', 390, 215], ['bin', 390, 245], ['bin', 390, 275], ['bin', 418, 230], ['bin', 418, 260]],
     walls: [...BOUNDS, R(260, 40, 480, 90)],
   },
@@ -125,6 +130,7 @@ const PARK_SCENES = {
   // 12③：草坪 + 广场舞专区 + 单元门三区重叠处
   finale12: {
     theme: 'plaza',
+    triple: true,
     spawn: { x: 80, y: 480, angle: Math.PI / 2 },
     building: R(300, 40, 400, 90),
     doors: [R(470, 110, 60, 20)],
@@ -134,7 +140,8 @@ const PARK_SCENES = {
     grass: [R(290, 190, 250, 170)],
     signs: [[340, 330]],
     spots: [...row(200, 550, 14)],
-    npcs: [parked(250, 550), parked(400, 550, Math.PI), parked(650, 550), parked(800, 550, Math.PI)],
+    npcs: [parked(250, 550), parked(350, 550, Math.PI), parked(400, 550, Math.PI), parked(500, 550),
+           parked(600, 550, Math.PI), parked(650, 550), parked(750, 550), parked(800, 550, Math.PI)],
     props: [['bin', 600, 150], ['bin', 630, 150], ['bin', 660, 150], ['cone', 450, 260], ['cone', 470, 290]],
     walls: [...BOUNDS, R(300, 40, 400, 90)],
   },
@@ -147,32 +154,37 @@ const DRIVE_SCENES = {
                solidEvery: 1100, yellowEvery: 1500, props: true },
   rural8:    { lanes: [-1, 1], limit: 260, gap: [300, 520], speed: [150, 210], oncomingGap: [320, 620],
                oncomingSpeed: [170, 240], time: 60, solidEvery: 1300, yellowEvery: 1900, props: true },
+  // brakeGap：别车判定的切入距离（车长倍数，默认 0.5）；第 9 关是别车主题关，放宽到 0.9
   express9:  { lanes: [1, 1, 1], limit: 320, gap: [180, 360], speed: [190, 260], time: 60,
-               solidEvery: 1400, yellowEvery: 1700, props: true },
+               solidEvery: 1400, yellowEvery: 1700, props: true, brakeGap: 0.9 },
+  // cutInMax / brakeMax / noSignalMax：覆盖每关上限；第 10 关后方车流无穷，变道类不该是主菜
   turtle10:  { lanes: [1, 1, 1], limit: 300, gap: [320, 560], speed: [230, 300], time: 60,
-               solidEvery: 1500, yellowEvery: 2000, turtleHonk: true, spawnBehind: true },
+               solidEvery: 1500, yellowEvery: 2000, turtleHonk: true, spawnBehind: true,
+               cutInMax: 4, brakeMax: 2, noSignalMax: 5 },
   service11: { lanes: [1, 1, 1], limit: 300, gap: [220, 460], speed: [180, 250], time: 45,
                solidEvery: 1200, yellowEvery: 1500, props: true, turtleHonk: true, exitEvery: 2600 },
   narrow12:  { lanes: [1], laneW: 96, limit: 200, time: 40, standoff: true, noTraffic: true },
 };
 
 // ── 12 关 ───────────────────────────────────────────────────────────────────
-// 驾驶关目标分按 tools/balance.js 实测最高分 × 65% 设定（设计案 §2.6）
+// 目标分 ≈ 实测满分 × 65%（设计案 §2.6）：停车关按 tools/park_max.js 搜索的最高结算分（含道具 / 挪车电话），
+// 驾驶关按 tools/balance.js 激进 bot 最高分，且须高于随机 bot 中位数（乱开不能过关）
+// 停车关另一条原则：通用解（斜停占位 + 贴脸）只够 ★~★★，★★★ 必须吃到本关主题区域
 const LEVELS = [
-  { n: 1,  target: 450,  hint: '找个地方停一下',   phases: [{ type: 'park',  scene: 'garage1' }], tutorial: true },
-  { n: 2,  target: 520,  hint: '前面好像有位置',   phases: [{ type: 'park',  scene: 'garage2' }] },
-  { n: 3,  target: 480,  hint: '拐进去看看',       phases: [{ type: 'park',  scene: 'garage3' }] },
-  { n: 4,  target: 560,  hint: '靠边停一下',       phases: [{ type: 'park',  scene: 'street4' }] },
-  { n: 5,  target: 500,  hint: '找个宽敞的地方',   phases: [{ type: 'park',  scene: 'lawn5' }] },
-  { n: 6,  target: 640,  hint: '到家了',           phases: [{ type: 'park',  scene: 'community6', phone: true }] },
-  { n: 7,  target: 3800, hint: '驶入下一个路口',   phases: [{ type: 'drive', scene: 'highway7' }], tutorial: true },
-  { n: 8,  target: 2350, hint: '抄个近道',         phases: [{ type: 'drive', scene: 'rural8' }] },
-  { n: 9,  target: 4600, hint: '赶时间',           phases: [{ type: 'drive', scene: 'express9' }] },
-  { n: 10, target: 6100, hint: '不急，慢慢开',     phases: [{ type: 'drive', scene: 'turtle10' }] },
-  { n: 11, target: 5100, hint: '出趟远门',
+  { n: 1,  target: 560,  hint: '找个地方停一下',   phases: [{ type: 'park',  scene: 'garage1' }], tutorial: true },
+  { n: 2,  target: 760,  hint: '前面好像有位置',   phases: [{ type: 'park',  scene: 'garage2' }] },
+  { n: 3,  target: 720,  hint: '拐进去看看',       phases: [{ type: 'park',  scene: 'garage3' }] },
+  { n: 4,  target: 820,  hint: '靠边停一下',       phases: [{ type: 'park',  scene: 'street4' }] },
+  { n: 5,  target: 700,  hint: '找个宽敞的地方',   phases: [{ type: 'park',  scene: 'lawn5' }] },
+  { n: 6,  target: 1140, hint: '到家了',           phases: [{ type: 'park',  scene: 'community6', phone: true }] },
+  { n: 7,  target: 2200, hint: '驶入下一个路口',   phases: [{ type: 'drive', scene: 'highway7' }], tutorial: true },
+  { n: 8,  target: 1800, hint: '抄个近道',         phases: [{ type: 'drive', scene: 'rural8' }] },
+  { n: 9,  target: 3200, hint: '赶时间',           phases: [{ type: 'drive', scene: 'express9' }] },
+  { n: 10, target: 4000, hint: '不急，慢慢开',     phases: [{ type: 'drive', scene: 'turtle10' }] },
+  { n: 11, target: 4400, hint: '出趟远门',
     phases: [{ type: 'drive', scene: 'service11' },
              { type: 'park',  scene: 'service11', phone: true, intro: '驶入服务区' }] },
-  { n: 12, target: 1500, hint: '最后一程',
+  { n: 12, target: 2900, hint: '最后一程',
     phases: [{ type: 'drive', scene: 'narrow12' },
              { type: 'park',  scene: 'street12', phone: true, intro: '前方仅剩半个车位', miniResult: true },
              { type: 'park',  scene: 'finale12', phone: true, intro: '终点就在眼前' }] },
@@ -187,6 +199,7 @@ function parkItemsOf(sc, phone) {
   if (sc.grass) s.push('grass');
   if (sc.dance) s.push('dance');
   if (sc.lobby) s.push('lobby');
+  if (sc.triple) s.push('triple');
   if (sc.props) s.push('cone');
   if (phone) s.push('refuseMove');
   return s;

@@ -329,16 +329,13 @@ class ParkScene {
 
     const occ = [];
     for (const s of sc.spots) {
-      const f = obbCoverage(p.x, p.y, p.w, p.h, p.angle, spotPoly(s), 10);
+      const f =obbCoverage(p.x, p.y, p.w, p.h, p.angle, spotPoly(s), 10);
       if (f > 0.15) occ.push({ s, f });
     }
     occ.sort((a, b) => b.f - a.f);
     occ.forEach(({ s }, i) => {
-      const base = i === 0 ? SCORE.FIRST_SPOT : SCORE.EXTRA_SPOT;
-      add(i === 0 ? 'spot' : 'extraSpot', base);
-      let sub = base;
-      if (s.kind === 'charge') { add('charge', SCORE.CHARGE_SPOT); sub += SCORE.CHARGE_SPOT; }
-      if (s.kind === 'vip') add('vip', Math.round(sub * (SCORE.VIP_MULT - 1)));
+      add(i === 0 ? 'spot' : 'extraSpot', i === 0 ? SCORE.FIRST_SPOT : SCORE.EXTRA_SPOT);
+      if (s.kind === 'charge') add('charge', SCORE.CHARGE_SPOT);
     });
 
     // 倾角：相对占用最多的车位，否则相对最近车位
@@ -370,6 +367,19 @@ class ParkScene {
 
     let total = 0;
     for (const k in items) total += items[k].points;
+    // 一停三吃（只在三区重叠的终局场景开放）：同时压中出入口 / 草坪（≥30%）/ 广场舞专区 / 单元门中的至少三样，整次结算 ×1.5
+    const zones = ['entrance', 'dance', 'lobby'].filter(k => items[k]).length + (g >= 0.3 ? 1 : 0);
+    if (sc.triple && zones >= 3) {
+      const bonus = Math.round(total * (SCORE.TRIPLE_MULT - 1));
+      add('triple', bonus);
+      total += bonus;
+    }
+    // 物业经理专属位：本次结算全部得分 ×1.5
+    if (occ.some(o => o.s.kind === 'vip')) {
+      const bonus = Math.round(total * (SCORE.VIP_MULT - 1));
+      add('vip', bonus);
+      total += bonus;
+    }
     return { items, total, occ, deg, dance };
   }
 

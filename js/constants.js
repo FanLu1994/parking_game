@@ -50,27 +50,33 @@ const SCORE = {
   FIRST_SPOT:       200,
   EXTRA_SPOT:       280,
   CHARGE_SPOT:      150,
-  VIP_MULT:         1.5,
+  VIP_MULT:         1.5, // 占到专属位时整次结算 ×1.5
   ANGLE_MAX:        220, // at 45°
   ANGLE_DEG_MAX:    45,
   ANGLE_DEG_MIN:    0,
   BLOCK_ENTRANCE:   320,
-  GRASS_MAX:        520,
-  DANCE_ZONE:       300,
+  GRASS_MAX:        600,
+  DANCE_ZONE:       400,
   TAILGATE:         170, // per car
   TAILGATE_PX:      8,
-  BLOCK_LOBBY:      260,
+  BLOCK_LOBBY:      320,
+  TRIPLE_MULT:      1.5, // 一停三吃：同时压中三类禁停区域
 
   // driving – discrete
   CUT_IN:           150,
+  CUT_IN_MAX:       10,  // 每关上限：第 10 关后方车流无穷，不设上限时加塞 / 别车可刷到 5000+
   NO_SIGNAL:        80,
-  HIGHBEAM_CAR:     120,
+  NO_SIGNAL_NEAR:   2,   // 目标车道 2 车长内有车才计分（原型实测空路摆方向可占驾驶关总分 70%）
+  NO_SIGNAL_MAX:    12,
+  HIGHBEAM_CAR:     40,
+  HIGHBEAM_HEADON:  3,   // 位于该对向车的车道内（逆行正面晃）时倍率；只开远光不逆行拿不到大头
   HIGHBEAM_MAX:     8,   // 每关最多计 8 辆（设计案未给上限，原型实测对向车流下会无限刷分）
   BRAKE_CUT:        300,
+  BRAKE_CUT_MAX:    6,
   HONK:             30,
   HONK_CD:          2,
   HONK_MAX:         10,
-  TURTLE_RESIST:    20,
+  TURTLE_RESIST:    50,  TURTLE_RESIST_MAX: 16,
 
   // driving – continuous (per second)
   RIDE_SOLID:       30,  CAP_RIDE_SOLID:  240,
@@ -81,6 +87,7 @@ const SCORE = {
   // collision
   SCRAPE:           100,
   CONE:             60,
+  CONE_MAX_DRIVE:   6,   // 驾驶关每段最多计 6 个（路肩锥桶连绵不断，否则沿边蹭就能刷分）
 
   // misc
   REFUSE_MOVE:      80,  REFUSE_MOVE_MAX: 5,
@@ -118,14 +125,14 @@ const FONT_TITLE = '"ZCOOL KuaiLe", "PingFang SC", "Microsoft YaHei", sans-serif
 const FONT_BODY  = '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
 
 // ─── Ranks ────────────────────────────────────────────────────────────────────
-// 阈值：P2/P3/P4/P5 ≈ 第 2/5/8/11 关累计目标分，P6 ≈ 全部目标分合计 × 1.13
+// 阈值：P2/P3/P4/P5 ≈ 第 2/5/8/11 关累计目标分（1320/3560/8700/20300），P6 ≈ 全部目标分合计 23200 × 1.13
 const RANKS = [
-  { score: 0,    name: 'P1 · 科目二学员' },
-  { score: 1000, name: 'P2 · 新手上路'   },
-  { score: 2500, name: 'P3 · 马路显眼包' },
-  { score: 9500,  name: 'P4 · 加塞艺术家' },
-  { score: 25000, name: 'P5 · 别车宗师'   },
-  { score: 30000, name: 'P6 · 车库之神'   },
+  { score: 0,     name: 'P1 · 科目二学员' },
+  { score: 1300,  name: 'P2 · 新手上路'   },
+  { score: 3500,  name: 'P3 · 马路显眼包' },
+  { score: 8500,  name: 'P4 · 加塞艺术家' },
+  { score: 20000, name: 'P5 · 别车宗师'   },
+  { score: 26000, name: 'P6 · 车库之神'   },
 ];
 
 function getRank(totalScore) {

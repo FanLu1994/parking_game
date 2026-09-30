@@ -13,6 +13,7 @@ const ITEM_DEFS = {
   dance:      { label: '广场舞专区' },
   tailgate:   { label: '贴脸停车' },
   lobby:      { label: '堵单元门' },
+  triple:     { label: '一停三吃 ×1.5' },
   // 驾驶：离散
   cutIn:      { label: '强行加塞',   note: '现实中：强行加塞极易引发追尾和路怒冲突' },
   noSignal:   { label: '变道不打灯', note: '现实中：变道不打灯属于违法行为，后车无法预判' },

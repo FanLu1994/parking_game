@@ -50,6 +50,9 @@ class DriveScene {
     this.cutInCars = new Set();
     this.beamed = new Set();
     this.laneChanges = 0;
+    this.noSignalN = 0;
+    this.conesHit = 0;
+    this.turtleResistN = 0;
 
     if (!cfg.noTraffic) this.populate();
     if (cfg.standoff) this.initStandoff();
@@ -168,7 +171,8 @@ class DriveScene {
         n.honkCD = 2.2;
         n.honks++;
         Sfx.horn(0.75);
-        this.book.discrete('turtleResist', SCORE.TURTLE_RESIST, n.x, n.y - 40);
+        if (this.turtleResistN++ < SCORE.TURTLE_RESIST_MAX)
+          this.book.discrete('turtleResist', SCORE.TURTLE_RESIST, n.x, n.y - 40);
         this.book.emit('_bubble', 0, n.x, n.y - 30, { text: pick(['滴滴！', '走不走啊！', '快车道啊大哥！', '滴——']) });
         if (n.honks >= 2) n.stuck = 99;
       }
@@ -372,7 +376,7 @@ class DriveScene {
       if (satTest(pp2, pr.poly())) {
         pr.knock(p.vx, p.vy);
         Sfx.thud();
-        this.book.flat('cone', SCORE.CONE, pr.x, pr.y);
+        if (this.conesHit++ < SCORE.CONE_MAX_DRIVE) this.book.flat('cone', SCORE.CONE, pr.x, pr.y);
       }
     }
   }
@@ -393,7 +397,12 @@ class DriveScene {
     if (from < 0 || from >= this.nL) return;
     this.laneChanges++;
 
-    if (this.t - this.lastSignalT > 2) this.book.discrete('noSignal', SCORE.NO_SIGNAL, p.x, p.y - 40);
+    // 不打灯：目标车道附近得有车"看见"才算，空路上摆方向不计分；每关有上限
+    const witness = this.npcs.some(n => n.lane === lane && Math.abs(n.y - p.y) < CAR_LEN * SCORE.NO_SIGNAL_NEAR);
+    if (this.t - this.lastSignalT > 2 && witness && this.noSignalN < (this.cfg.noSignalMax ?? SCORE.NO_SIGNAL_MAX)) {
+      this.noSignalN++;
+      this.book.discrete('noSignal', SCORE.NO_SIGNAL, p.x, p.y - 40);
+    }
 
     // 加塞：目标车道后车距离 < 1.5 车长；同一辆车每关只计一次
     if (this.lanes[lane] !== 1) return;
@@ -403,10 +412,10 @@ class DriveScene {
       const g = n.y - p.y - (n.h + p.h) / 2;
       if (g < gap) { gap = g; back = n; }
     }
-    if (back && gap < CAR_LEN * 1.5 && !this.cutInCars.has(back)) {
+    if (back && gap < CAR_LEN * 1.5 && !this.cutInCars.has(back) && this.cutInCars.size < (this.cfg.cutInMax ?? SCORE.CUT_IN_MAX)) {
       this.cutInCars.add(back);
       this.book.discrete('cutIn', SCORE.CUT_IN, p.x, p.y - 60);
-      if (gap < CAR_LEN * 0.5 && !this.brakeChecked.has(back))
+      if (gap < CAR_LEN * (this.cfg.brakeGap || 0.5) && !this.brakeChecked.has(back) && this.brakeChecked.size < (this.cfg.brakeMax ?? SCORE.BRAKE_CUT_MAX))
         this.pendingBrake = { npc: back, t: this.t, v: Math.max(p.speed, 1) };
     }
   }
@@ -440,7 +449,9 @@ class DriveScene {
       n.glare = 1.6;
       if (this.beamed.has(n) || this.beamed.size >= SCORE.HIGHBEAM_MAX) continue;
       this.beamed.add(n);
-      this.book.discrete('highbeam', SCORE.HIGHBEAM_CAR, n.x, n.y + 30);
+      // 逆行进对向车道正面晃：翻倍
+      const headOn = this.laneOf(p.x) === n.lane;
+      this.book.discrete('highbeam', SCORE.HIGHBEAM_CAR * (headOn ? SCORE.HIGHBEAM_HEADON : 1), n.x, n.y + 30);
     }
   }
 
