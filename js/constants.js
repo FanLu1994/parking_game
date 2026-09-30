@@ -125,14 +125,14 @@ const FONT_TITLE = '"ZCOOL KuaiLe", "PingFang SC", "Microsoft YaHei", sans-serif
 const FONT_BODY  = '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
 
 // ─── Ranks ────────────────────────────────────────────────────────────────────
-// 阈值：P2/P3/P4/P5 ≈ 第 2/5/8/11 关累计目标分（1320/3560/8700/20300），P6 ≈ 全部目标分合计 23200 × 1.13
+// 阈值：P2/P3/P4/P5 ≈ 第 2/5/8/11 关累计目标分（1320/3560/8500/19600），P6 ≈ 全部目标分合计 22100 × 1.13
 const RANKS = [
   { score: 0,     name: 'P1 · 科目二学员' },
   { score: 1300,  name: 'P2 · 新手上路'   },
   { score: 3500,  name: 'P3 · 马路显眼包' },
   { score: 8500,  name: 'P4 · 加塞艺术家' },
-  { score: 20000, name: 'P5 · 别车宗师'   },
-  { score: 26000, name: 'P6 · 车库之神'   },
+  { score: 19500, name: 'P5 · 别车宗师'   },
+  { score: 25000, name: 'P6 · 车库之神'   },
 ];
 
 function getRank(totalScore) {

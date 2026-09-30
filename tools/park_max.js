@@ -1,6 +1,7 @@
 // 停车关满分搜索：网格枚举玩家车位姿（排除与墙 / 立柱 / 他车重叠的位置），输出各停车阶段的最高结算分
 // 用法：node tools/park_max.js [步长px]
-// 注：只检查位姿是否合法，不保证能开进去；挪车电话"就不挪"另计（每阶段最多 +400）
+// 注：只检查位姿是否合法，不保证能开进去；挪车电话"就不挪"另计：每次停车只弹一次，正常玩每阶段 +80
+//（反复停一下再挪才能多弹，最多 5 次 = 400，目标分不按这个算）
 const { run, sandbox } = require('./harness');
 sandbox.STEP = Number(process.argv[2] || 8);
 run(String.raw`
@@ -23,7 +24,7 @@ for (const lv of LEVELS) {
           if (r.total > best.total) best = { total: r.total, x, y, a, items: r.items };
         }
     const items = Object.entries(best.items).map(([k, v]) => k + ' ' + v.points).join(', ');
-    const phoneMax = ph.phone ? SCORE.REFUSE_MOVE * SCORE.REFUSE_MOVE_MAX : 0;
+    const phoneMax = ph.phone ? SCORE.REFUSE_MOVE : 0;
     rows.push({ lv: lv.n, phase: pi + 1, scene: ph.scene, target: lv.target, max: best.total, phone: phoneMax,
                 at: best.x + ',' + best.y + '@' + best.a, items });
   });

@@ -173,7 +173,7 @@ const DRIVE_SCENES = {
 };
 
 // ── 12 关 ───────────────────────────────────────────────────────────────────
-// 目标分 ≈ 实测满分 × 65%（设计案 §2.6）：停车关按 tools/park_max.js 搜索的最高结算分（含道具 / 挪车电话），
+// 目标分 ≈ 实测满分 × 65%（设计案 §2.6）：停车关按 tools/park_max.js 搜索的最高结算分（含道具，挪车电话每阶段按拒绝 1 次计），
 // 驾驶关按 tools/balance.js 激进 bot 最高分，且须高于随机 bot 中位数（乱开不能过关）
 // 停车关另一条原则：通用解（斜停占位 + 贴脸）只够 ★~★★，★★★ 必须吃到本关主题区域
 const LEVELS = [
@@ -182,15 +182,15 @@ const LEVELS = [
   { n: 3,  target: 720,  hint: '拐进去看看',       phases: [{ type: 'park',  scene: 'garage3' }] },
   { n: 4,  target: 820,  hint: '靠边停一下',       phases: [{ type: 'park',  scene: 'street4' }] },
   { n: 5,  target: 700,  hint: '找个宽敞的地方',   phases: [{ type: 'park',  scene: 'lawn5' }] },
-  { n: 6,  target: 1140, hint: '到家了',           phases: [{ type: 'park',  scene: 'community6', phone: true }] },
+  { n: 6,  target: 940,  hint: '到家了',           phases: [{ type: 'park',  scene: 'community6', phone: true }] },
   { n: 7,  target: 2200, hint: '驶入下一个路口',   phases: [{ type: 'drive', scene: 'highway7' }], tutorial: true },
   { n: 8,  target: 1800, hint: '抄个近道',         phases: [{ type: 'drive', scene: 'rural8' }] },
   { n: 9,  target: 3200, hint: '赶时间',           phases: [{ type: 'drive', scene: 'express9' }] },
   { n: 10, target: 4000, hint: '不急，慢慢开',     phases: [{ type: 'drive', scene: 'turtle10' }] },
-  { n: 11, target: 4400, hint: '出趟远门',
+  { n: 11, target: 3900, hint: '出趟远门',
     phases: [{ type: 'drive', scene: 'service11' },
              { type: 'park',  scene: 'service11', phone: true, intro: '驶入服务区' }] },
-  { n: 12, target: 2900, hint: '最后一程',
+  { n: 12, target: 2500, hint: '最后一程',
     phases: [{ type: 'drive', scene: 'narrow12' },
              { type: 'park',  scene: 'street12', phone: true, intro: '前方仅剩半个车位', miniResult: true },
              { type: 'park',  scene: 'finale12', phone: true, intro: '终点就在眼前' }] },
