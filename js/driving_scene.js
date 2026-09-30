@@ -553,18 +553,12 @@ class DriveScene {
     ctx.save();
     ctx.translate(0, -this.camY);
 
-    // 路外
-    ctx.fillStyle = '#1f2b22'; ctx.fillRect(0, y0, CANVAS_W, y1 - y0);
-    const rnd = mulberry32(3);
-    ctx.fillStyle = '#26352a';
-    for (let i = 0; i < 60; i++) {
-      const x = rnd() * CANVAS_W, yy = rnd() * 2000;
-      const wy = y0 + ((yy - y0) % 2000 + 2000) % 2000;
-      ctx.fillRect(x, wy - 1000, 16, 16);
-    }
+    // 路外景观
+    drawRoadside(ctx, this, y0, y1);
     // 路肩 + 路面
     ctx.fillStyle = '#2b2e33'; ctx.fillRect(this.railL, y0, this.railR - this.railL, y1 - y0);
     drawAsphalt(ctx, this.roadL, y0, this.roadR - this.roadL, y1 - y0);
+    drawRoadSurface(ctx, this, y0, y1);
 
     // 匝道
     if (this.cfg.exitEvery) {
@@ -633,6 +627,13 @@ class DriveScene {
   }
 
   drawRail(ctx, x, y0, y1, gaps) {
+    // 村道：路边是矮墙 / 路牙，不是高速护栏
+    if (this.cfg.scenery === 'village') {
+      ctx.fillStyle = '#8a8478'; ctx.fillRect(x - 4, y0, 8, y1 - y0);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      for (let yy = Math.floor(y0 / 26) * 26; yy < y1; yy += 26) ctx.fillRect(x - 4, yy, 8, 1.5);
+      return;
+    }
     ctx.fillStyle = '#8a9099';
     const segs = [[y0, y1]];
     if (gaps) {

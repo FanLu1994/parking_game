@@ -46,6 +46,14 @@ function drawAsphalt(g, x, y, w, h, base = C.asphalt) {
 function drawGrass(g, r, seed = 7) {
   g.fillStyle = C.grass; g.fillRect(r.x, r.y, r.w, r.h);
   const rnd = mulberry32(seed + r.x * 13 + r.y);
+  // 深浅斑块
+  g.save();
+  g.beginPath(); g.rect(r.x, r.y, r.w, r.h); g.clip();
+  for (let i = 0, n = Math.ceil(r.w * r.h / 3000); i < n; i++) {
+    g.fillStyle = rnd() < 0.5 ? 'rgba(20,50,20,0.35)' : 'rgba(80,130,60,0.18)';
+    g.beginPath(); g.ellipse(r.x + rnd() * r.w, r.y + rnd() * r.h, 14 + rnd() * 26, 10 + rnd() * 16, rnd() * 3, 0, Math.PI * 2); g.fill();
+  }
+  g.restore();
   g.strokeStyle = C.grassLt; g.lineWidth = 1.4;
   g.beginPath();
   const n = Math.floor(r.w * r.h / 260);
@@ -56,7 +64,17 @@ function drawGrass(g, r, seed = 7) {
     g.moveTo(x, y); g.lineTo(x + 3, y - 4);
   }
   g.stroke();
-  g.strokeStyle = '#1f3f1f'; g.lineWidth = 2; g.strokeRect(r.x, r.y, r.w, r.h);
+  // 小花
+  for (let i = 0, m = Math.floor(r.w * r.h / 1800); i < m; i++) {
+    g.fillStyle = ['#e8d86a', '#f0f0f0', '#e88aa8'][Math.floor(rnd() * 3)];
+    g.beginPath(); g.arc(r.x + 4 + rnd() * (r.w - 8), r.y + 4 + rnd() * (r.h - 8), 1.6, 0, Math.PI * 2); g.fill();
+  }
+  // 路牙石
+  g.strokeStyle = '#8a8a82'; g.lineWidth = 3; g.strokeRect(r.x + 1.5, r.y + 1.5, r.w - 3, r.h - 3);
+  g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 1;
+  g.beginPath();
+  for (let x = r.x + 18; x < r.x + r.w; x += 18) { g.moveTo(x + 0.5, r.y); g.lineTo(x + 0.5, r.y + 3); g.moveTo(x + 0.5, r.y + r.h - 3); g.lineTo(x + 0.5, r.y + r.h); }
+  g.stroke();
 }
 
 function drawLabel(g, text, x, y, color, size = 12, bg = 'rgba(0,0,0,0.55)') {
@@ -142,19 +160,25 @@ class ParkScene {
     c.width = CANVAS_W; c.height = CANVAS_H;
     const g = c.getContext('2d');
     const sc = this.sc;
+    const seed = this.level.n * 97 + (this.phase.scene.length * 13);
     drawAsphalt(g, 0, 0, CANVAS_W, CANVAS_H, sc.theme === 'plaza' ? '#272a30' : C.asphalt);
+    decorParkFloor(g, sc, seed);
+    if (sc.theme === 'garage') decorGarageLights(g);
 
     if (sc.theme === 'street') {
       for (const r of sc.sidewalks || []) {
         g.fillStyle = getPattern(g, 'tiles'); g.fillRect(r.x, r.y, r.w, r.h);
         g.fillStyle = '#9a968e'; g.fillRect(r.x, r.y + r.h - 5, r.w, 5);
       }
+      decorStreet(g, sc, seed);
       g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 3; g.setLineDash([30, 24]);
       for (const y of sc.laneLines || []) { g.beginPath(); g.moveTo(16, y); g.lineTo(984, y); g.stroke(); }
       g.setLineDash([]);
     }
+    if (sc.theme === 'plaza') decorPlaza(g, sc);
     for (const r of sc.grass || []) drawGrass(g, r);
     for (const r of sc.dance || []) {
+      decorDance(g, r, sc.speaker);
       g.fillStyle = 'rgba(232,193,74,0.08)'; g.fillRect(r.x, r.y, r.w, r.h);
       g.fillStyle = getPattern(g, 'yellowgrid'); g.fillRect(r.x, r.y, r.w, r.h);
       g.strokeStyle = C.lineYellow; g.lineWidth = 3; g.strokeRect(r.x, r.y, r.w, r.h);
@@ -167,50 +191,61 @@ class ParkScene {
     }
     for (const r of sc.entrances || []) {
       g.fillStyle = getPattern(g, 'hatch'); g.fillRect(r.x, r.y, r.w, r.h);
+      g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(r.x, r.y, r.w, r.h);
       drawLabel(g, `${sc.entranceLabel || '出入口'} · 禁停`, r.x + r.w / 2, r.y + r.h / 2, C.lineYellow, 11);
     }
-    for (const s of sc.spots) drawSpot(g, s);
+    sc.spots.forEach((s, i) => { drawSpot(g, s); decorSpot(g, s, i, sc.theme); });
+    for (const [x, y, a] of sc.arrows || []) drawFloorArrow(g, x, y, a);
 
-    // 建筑
+    // 建筑（俯视楼顶）
     if (sc.building) {
       const b = sc.building;
-      g.fillStyle = '#4a4540'; g.fillRect(b.x, b.y, b.w, b.h);
-      g.fillStyle = '#5c564f';
-      for (let x = b.x + 14; x < b.x + b.w - 30; x += 44) g.fillRect(x, b.y + 22, 28, 18);
-      g.fillStyle = '#3a3530'; g.fillRect(b.x, b.y + b.h - 6, b.w, 6);
-      drawLabel(g, sc.buildingLabel || '3 号楼', b.x + 60, b.y + 14, '#ddd', 11);
+      drawRoof(g, b, seed, '#4a4540');
+      drawLabel(g, sc.buildingLabel || '3 号楼', b.x + 60, b.y + 26, '#ddd', 11);
       for (const d of sc.doors || []) {
+        g.fillStyle = '#6a625a'; g.fillRect(d.x - 8, d.y - 4, d.w + 16, 4);   // 雨棚
         g.fillStyle = '#2b3a4f'; g.fillRect(d.x, d.y, d.w, d.h);
+        g.fillStyle = 'rgba(140,180,220,0.25)'; g.fillRect(d.x + 3, d.y + 3, d.w / 2 - 4, d.h - 6);
         g.fillStyle = '#e8e4cc'; g.font = `bold 10px ${FONT_BODY}`;
         g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.fillText('单元门', d.x + d.w / 2, d.y + d.h / 2);
+        g.fillText(sc.doorLabel || '单元门', d.x + d.w / 2, d.y + d.h / 2);
       }
     }
-    // 外墙
-    for (const r of sc.walls) {
-      if (r === sc.building) continue;
-      if (sc.theme === 'street' && (sc.sidewalks || []).some(s => s.y === r.y && r.h === s.h)) continue;
-      g.fillStyle = '#3a3d44'; g.fillRect(r.x, r.y, r.w, r.h);
-    }
+    // 外墙（建筑本身也登记在 walls 里当碰撞体，按坐标跳过，不要画成墙盖住楼顶）
+    const b = sc.building;
+    sc.walls.forEach((r, i) => {
+      if (b && r.x === b.x && r.y === b.y && r.w === b.w && r.h === b.h) return;
+      if (sc.theme === 'street' && (sc.sidewalks || []).some(s => s.y === r.y && r.h === s.h)) return;
+      decorWall(g, r, sc.theme, seed + i);
+    });
+    decorEdgeShadow(g);
+    if (sc.theme === 'garage') decorGarageSigns(g, sc);
     // 立柱
     for (const r of sc.pillars || []) {
+      shadowRect(g, r, 7, 9, 0.35);
       g.fillStyle = '#6a6d74'; g.fillRect(r.x, r.y, r.w, r.h);
+      g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(r.x, r.y, r.w, 3); g.fillRect(r.x, r.y, 3, r.h);
       g.fillStyle = getPattern(g, 'hatch'); g.fillRect(r.x, r.y + r.h - 8, r.w, 8);
     }
     // 地锁
     for (const [x, y] of sc.locks || []) {
+      g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(x - 9, y - 2, 22, 10);
       g.fillStyle = '#1a1a1a'; g.fillRect(x - 11, y - 5, 22, 10);
       g.fillStyle = C.lineYellow; g.fillRect(x - 9, y - 3, 18, 6);
       g.fillStyle = '#1a1a1a'; g.fillRect(x - 3, y - 3, 6, 6);
     }
     // 充电桩
     for (const [x, y] of sc.chargers || []) {
+      g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(x - 6, y - 4, 18, 14);
       g.fillStyle = '#dfe6ea'; g.fillRect(x - 9, y - 7, 18, 14);
       g.fillStyle = C.chargeBlue; g.fillRect(x - 5, y - 3, 10, 6);
+      g.strokeStyle = '#1a1c20'; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(x + 9, y); g.quadraticCurveTo(x + 18, y + 6, x + 14, y + 14); g.stroke();
     }
     // 音箱道具
     if (sc.speaker) {
       const r = sc.speaker;
+      shadowRect(g, r, 4, 5, 0.35);
       g.fillStyle = '#111'; g.fillRect(r.x, r.y, r.w, r.h);
       g.fillStyle = '#444';
       g.beginPath(); g.arc(r.x + r.w / 2, r.y + 10, 6, 0, Math.PI * 2); g.fill();
@@ -221,6 +256,10 @@ class ParkScene {
       g.fillStyle = '#8a6a3a'; g.fillRect(x - 1.5, y, 3, 14);
       drawLabel(g, '草坪 · 请勿踩踏', x, y - 4, '#fff', 10, '#3a6a3a');
     }
+    // 暗角
+    const vg = g.createRadialGradient(CANVAS_W / 2, CANVAS_H / 2, 260, CANVAS_W / 2, CANVAS_H / 2, 640);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.28)');
+    g.fillStyle = vg; g.fillRect(0, 0, CANVAS_W, CANVAS_H);
     return c;
   }
 

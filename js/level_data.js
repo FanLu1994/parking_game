@@ -24,6 +24,7 @@ const PARK_SCENES = {
     spots: [...row(260, 140, 10), ...row(260, 520, 10)],
     npcs: [parked(310, 520), parked(360, 520, Math.PI), parked(510, 520), parked(660, 520, Math.PI),
            parked(560, 140)],
+    arrows: [[420, 280, 0], [720, 280, 0], [420, 380, Math.PI], [720, 380, Math.PI]],
     walls: [...BOUNDS],
   },
   // 2：充电位带桩体，普通位更空更顺
@@ -34,6 +35,7 @@ const PARK_SCENES = {
             ...row(260, 520, 10, 0, { 7: 'charge', 8: 'charge' })],
     chargers: [[260, 108], [310, 108], [360, 108], [410, 108], [610, 552], [660, 552]],
     npcs: [parked(310, 140), parked(260, 520), parked(310, 520, Math.PI), parked(460, 520), parked(760, 520, Math.PI)],
+    arrows: [[420, 280, 0], [720, 280, 0], [420, 380, Math.PI], [720, 380, Math.PI]],
     walls: [...BOUNDS],
   },
   // 3：物业经理专属位紧邻入口；地锁、立柱增加走位难度
@@ -46,6 +48,7 @@ const PARK_SCENES = {
     locks: [[400, 150], [500, 150], [650, 150], [750, 150], [400, 510], [600, 510], [850, 510]],
     pillars: [R(385, 315, 30, 30), R(605, 315, 30, 30), R(825, 315, 30, 30)],
     npcs: [parked(300, 140), parked(550, 140, Math.PI), parked(450, 520), parked(700, 520, Math.PI), parked(900, 520)],
+    arrows: [[510, 250, 0], [730, 250, 0], [510, 410, Math.PI], [730, 410, Math.PI]],
     walls: [...BOUNDS],
   },
   // 4：路边侧方位，他车间距刚好一辆车
@@ -100,6 +103,7 @@ const PARK_SCENES = {
     spawn: { x: 80, y: 330, angle: Math.PI / 2 },
     building: R(560, 40, 400, 80),
     buildingLabel: '服务区便利店',
+    doorLabel: '店门',
     doors: [R(730, 100, 60, 20)],
     lobby: [R(700, 120, 120, 64)],
     lobbyLabel: '门口禁停',
@@ -112,6 +116,7 @@ const PARK_SCENES = {
     npcs: [parked(310, 140), parked(260, 530), parked(410, 530, Math.PI), parked(560, 530), parked(760, 530, Math.PI),
            parked(860, 530)],
     props: [['bin', 850, 150], ['bin', 880, 150], ['cone', 620, 300], ['cone', 660, 300]],
+    arrows: [[800, 260, 0], [800, 420, Math.PI]],
     walls: [...BOUNDS, R(560, 40, 400, 80)],
   },
   // 12②：极限侧方，仅剩"半个车位"
@@ -148,22 +153,23 @@ const PARK_SCENES = {
 };
 
 // ── 驾驶场景 ────────────────────────────────────────────────────────────────
+// scenery：路边景观（纯视觉，见 scenery.js）
 // lanes：每条车道方向，+1 = 与玩家同向（向上），-1 = 对向；对向车道在左
 const DRIVE_SCENES = {
-  highway7:  { lanes: [1, 1, 1], limit: 300, gap: [260, 520], speed: [170, 250], time: 60,
+  highway7:  { scenery: 'highway', lanes: [1, 1, 1], limit: 300, gap: [260, 520], speed: [170, 250], time: 60,
                solidEvery: 1100, yellowEvery: 1500, props: true },
-  rural8:    { lanes: [-1, 1], limit: 260, gap: [300, 520], speed: [150, 210], oncomingGap: [320, 620],
+  rural8:    { scenery: 'rural', lanes: [-1, 1], limit: 260, gap: [300, 520], speed: [150, 210], oncomingGap: [320, 620],
                oncomingSpeed: [170, 240], time: 60, solidEvery: 1300, yellowEvery: 1900, props: true },
   // brakeGap：别车判定的切入距离（车长倍数，默认 0.5）；第 9 关是别车主题关，放宽到 0.9
-  express9:  { lanes: [1, 1, 1], limit: 320, gap: [180, 360], speed: [190, 260], time: 60,
+  express9:  { scenery: 'city', lanes: [1, 1, 1], limit: 320, gap: [180, 360], speed: [190, 260], time: 60,
                solidEvery: 1400, yellowEvery: 1700, props: true, brakeGap: 0.9 },
   // cutInMax / brakeMax / noSignalMax：覆盖每关上限；第 10 关后方车流无穷，变道类不该是主菜
-  turtle10:  { lanes: [1, 1, 1], limit: 300, gap: [320, 560], speed: [230, 300], time: 60,
+  turtle10:  { scenery: 'highway', lanes: [1, 1, 1], limit: 300, gap: [320, 560], speed: [230, 300], time: 60,
                solidEvery: 1500, yellowEvery: 2000, turtleHonk: true, spawnBehind: true,
                cutInMax: 4, brakeMax: 2, noSignalMax: 5 },
-  service11: { lanes: [1, 1, 1], limit: 300, gap: [220, 460], speed: [180, 250], time: 45,
+  service11: { scenery: 'highway', lanes: [1, 1, 1], limit: 300, gap: [220, 460], speed: [180, 250], time: 45,
                solidEvery: 1200, yellowEvery: 1500, props: true, turtleHonk: true, exitEvery: 2600 },
-  narrow12:  { lanes: [1], laneW: 96, limit: 200, time: 40, standoff: true, noTraffic: true },
+  narrow12:  { scenery: 'village', lanes: [1], laneW: 96, limit: 200, time: 40, standoff: true, noTraffic: true },
 };
 
 // ── 12 关 ───────────────────────────────────────────────────────────────────

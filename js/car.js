@@ -74,6 +74,13 @@ class Car {
   }
 }
 
+// 轮胎：从车身两侧略微露出
+function drawWheels(ctx, hw, hh, inset) {
+  ctx.fillStyle = '#141416';
+  for (const sx of [-1, 1]) for (const sy of [-1, 1])
+    ctx.fillRect(sx * (hw + 1.5) - (sx > 0 ? 4 : 0), sy * (hh - inset) - 5.5, 4, 11);
+}
+
 // 远光扇形（在车辆之前绘制）
 function drawHighbeam(ctx, car) {
   if (!car.highbeam) return;
@@ -99,6 +106,7 @@ function drawPlayerBody(ctx, car, t) {
   // 阴影
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   roundRectPath(ctx, -hw + 3, -hh + 4, w, h, 5); ctx.fill();
+  drawWheels(ctx, hw, hh, 14);
   // 车身
   ctx.fillStyle = '#e8c14a';
   roundRectPath(ctx, -hw, -hh, w, h, 4); ctx.fill();
@@ -159,8 +167,14 @@ function drawNpcBody(ctx, car, t) {
   const w = car.w, h = car.h, hw = w / 2, hh = h / 2;
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
   roundRectPath(ctx, -hw + 2, -hh + 3, w, h, 6); ctx.fill();
+  drawWheels(ctx, hw, hh, 12);
   ctx.fillStyle = car.color;
   roundRectPath(ctx, -hw, -hh, w, h, 6); ctx.fill();
+  // 车身高光（左侧受光）
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fillRect(-hw + 2, -hh + 6, 4, h - 12);
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillRect(hw - 5, -hh + 6, 3, h - 12);
   // 车窗（被远光照到时泛白）
   const glare = car.glare > 0;
   ctx.fillStyle = glare ? '#f4f6ff' : '#2c3542';
