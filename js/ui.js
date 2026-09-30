@@ -54,6 +54,10 @@ function drawTitleScreen(ctx, game) {
   ctx.fillStyle = '#9aa0a8'; ctx.font = `14px ${FONT_BODY}`;
   ctx.fillText('别的游戏罚你压线，这游戏给压线发奖', CANVAS_W / 2, 148);
 
+  // 右上角：GitHub 仓库链接
+  UI.button(ctx, CANVAS_W - 126, 22, 110, 30, '★ GitHub',
+    () => window.open(REPO_URL, '_blank', 'noopener'), { size: 13 });
+
   const total = Save.totalBest();
   const rank = getRank(total), next = getNextRank(total);
   ctx.fillStyle = '#e8ecf0'; ctx.font = `16px ${FONT_BODY}`;

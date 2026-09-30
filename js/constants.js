@@ -107,6 +107,8 @@ const STAR = {
 // start / duration 单位秒：从音频的哪一秒开始、播多久（结尾 0.8s 淡出）
 const CLEAR_SFX = { src: 'assets/audio/clear.mp3', start: 0, duration: 8, volume: 0.8 };
 
+const REPO_URL = 'https://github.com/FanLu1994/parking_game';
+
 // ─── Canvas ───────────────────────────────────────────────────────────────────
 const CANVAS_W = 1000;
 const CANVAS_H = 640;
